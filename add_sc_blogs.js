@@ -50,6 +50,26 @@ var trackAlreadyExists = function (track, playlist, user_id, callback) {
 	});
 }
 
+var postAlreadyExists = function (post, user_id, callback) {
+	var ParsePost = Parse.Object.extend("Posts");
+	var query = new Parse.Query(ParsePost);
+	query.equalTo("title", post.title);
+	query.equalTo("user", user_id);
+	query.equalTo("artist", post.user.username);
+
+	query.first({
+	  success: function(object) {
+	  	var found = (object) ? true: false; 
+	  	callback(found, post);
+	  },
+	  error: function(error) {
+	  	console.log('Searching for Post Error');
+	  	console.log(error); 
+	    callback(true, post);
+	  }
+	});
+}
+
 var savePlaylist = function (playlist, callback) {
 	playlist.save(null, {
 	  success: function(playlistName) {
@@ -104,8 +124,9 @@ var getParseUser = function (sc_id, callback) {
 	query.equalTo("soundcloudUsername", sc_id);
 	query.first({
 	  success: function(object) {
-	  	var name = object.get('name');
-	  	callback(object.id, name);
+	  	var display_name = object.get('name');
+	  	var user_name = object.get('username');
+	  	callback(object.id, display_name, user_name);
 	  },
 	  error: function(error) {
 	  	console.log('Get User Error');
@@ -115,8 +136,60 @@ var getParseUser = function (sc_id, callback) {
 
 }
 
-var run_post = function (sc_id) { 
+var calculate_posts = function (sc_id, posts) {
+	getParseUser(sc_id, function (parseUserId, parseDisplayName, parseUserName) {
+	    var totalCheck = 0; 
+	    function runPosts(i) {
+			if (i < posts.length) {
+				postAlreadyExists(posts[i], parseUserId, function (exists, post) {
+					if (!exists) {
+						var ParsePost= Parse.Object.extend("Posts");
+						var parsePost = new ParsePost();
+						parsePost.set('user', parseUserId); 
+						parsePost.set('userName', parseDisplayName); 
+						parsePost.set('username', parseUserName); 
+						
+						parsePost.set('title', post.title); 
+						parsePost.set('artist', post.user.username); 
+						
+						parsePost.save(null, {
+						  success: function(track) {
+						    console.log('Success');
+						    runPosts(i);
+						  },
+						  error: function(track, error) {
+						    console.log('Track Save Failure');
+						    console.log(error);
+						  }
+						});
+					} else {
+						i = i + 1;
+						runPosts(i);
+					}
+				}); 
+			} 
+		}
+  		runPosts(0);  
+    });
+}
+
+var run_tracks = function (sc_id) { 
 	SC.get('/users/'+sc_id+'/tracks', function (err, tracks) {
+	  if ( err ) {
+	  	console.log(err); 
+	  } else {
+	  	calculate_posts(sc_id, tracks);
+	  }
+	}); 
+}; 
+
+var run_faves = function (sc_id) { 
+	SC.get('/users/'+sc_id+'/favorites', function (err, favorites) {
+	  if ( err ) {
+	  	console.log(err); 
+	  } else {
+	  	calculate_posts(sc_id, favorites);
+	  }
 
 	}); 
 }; 
@@ -126,7 +199,7 @@ var run_playlist = function (sc_id) {
 	  if ( err ) {
 	  	console.log(err); 
 	  } else {
-	  	getParseUser(sc_id, function (parseUserId, parseUserName) {
+	  	getParseUser(sc_id, function (parseUserId, parseDisplayName) {
 		    var totalCheck = 0; 
 		    function runTracks (i, j) {
 		    	if (i < playlists.length) {
@@ -140,12 +213,12 @@ var run_playlist = function (sc_id) {
 								parseTrack.set('source', 'soundcloud'); 
 								parseTrack.set('user', parseUserId); 
 								parseTrack.set('title', track.title); 
-								parseTrack.set('userName', parseUserName); 
+								parseTrack.set('userName', parseDisplayName); 
 								parseTrack.save(null, {
 								  success: function(track) {
 								    console.log('Success');
 								    j = j+1; 
-								    runTracks(i, j++);
+								    runTracks(i, j);
 								  },
 								  error: function(track, error) {
 								    console.log('Track Save Failure');
@@ -159,7 +232,7 @@ var run_playlist = function (sc_id) {
 						}); 
 					} else {
 						console.log('new playlist'); 
-						checkName(playlists[i], parseUserId, parseUserName); 
+						checkName(playlists[i], parseUserId, parseDisplayName); 
 						i = i+1; 
 						runTracks(i, 0);
 					}
@@ -175,41 +248,48 @@ var run_playlist = function (sc_id) {
 }
 
 var sc_ids = [
-	'mugatunesofficial', 
-	'complexmag', 
+	// 'mugatunesofficial', 
+	// 'complexmag', 
 	'highonmusic1', 
-	'david_perkins14', 
-	'gideon-rosenthal'
+	// 'david_perkins14', 
+	// 'gideon-rosenthal'
 ];
 
-var fiveJob = new CronJob({
-  cronTime: '00 00 17 * * *',
-  onTick: function() {
-  	console.log('running');
-   	for (var i = 0; i < sc_ids.length; i++) {
-		run_playlist(sc_ids[i]);
-		run_post(sc_ids[i]);
-	}
-  },
-  start: false,
-  timeZone: 'America/Los_Angeles'
-});
+for (var i = 0; i < sc_ids.length; i++) {
+	run_tracks(sc_ids[i]);
+	run_faves(sc_ids[i]);
+	// run_playlist(sc_ids[i]);
+	// run_post(sc_ids[i]);
+}
 
-var eightJob = new CronJob({
-  cronTime: '00 00 8 * * *',
-  onTick: function() {
-  	console.log('running');
-   	for (var i = 0; i < sc_ids.length; i++) {
-		run_playlist(sc_ids[i]);
-		run_post(sc_ids[i]);
-	}
-  },
-  start: false,
-  timeZone: 'America/Los_Angeles'
-});
+// var fiveJob = new CronJob({
+//   cronTime: '00 00 17 * * *',
+//   onTick: function() {
+//   	console.log('running');
+//    	for (var i = 0; i < sc_ids.length; i++) {
+// 		run_playlist(sc_ids[i]);
+// 		run_post(sc_ids[i]);
+// 	}
+//   },
+//   start: false,
+//   timeZone: 'America/Los_Angeles'
+// });
 
-console.log('Script Started');
-fiveJob.start();
-eightJob.start();
+// var eightJob = new CronJob({
+//   cronTime: '00 00 8 * * *',
+//   onTick: function() {
+//   	console.log('running');
+//    	for (var i = 0; i < sc_ids.length; i++) {
+// 		run_playlist(sc_ids[i]);
+// 		run_post(sc_ids[i]);
+// 	}
+//   },
+//   start: false,
+//   timeZone: 'America/Los_Angeles'
+// });
+
+// console.log('Script Started');
+// fiveJob.start();
+// eightJob.start();
 
 
