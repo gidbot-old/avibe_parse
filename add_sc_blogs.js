@@ -255,41 +255,38 @@ var sc_ids = [
 	// 'gideon-rosenthal'
 ];
 
-for (var i = 0; i < sc_ids.length; i++) {
-	run_tracks(sc_ids[i]);
-	run_faves(sc_ids[i]);
-	// run_playlist(sc_ids[i]);
-	// run_post(sc_ids[i]);
-}
+var fiveJob = new CronJob({
+  cronTime: '00 00 17 * * *',
+  onTick: function() {
+  	console.log('running');
+   	for (var i = 0; i < sc_ids.length; i++) {
+		run_tracks(sc_ids[i]);
+		run_faves(sc_ids[i]);
+		run_playlist(sc_ids[i]);
+		run_post(sc_ids[i]);
+	}
+  },
+  start: false,
+  timeZone: 'America/Los_Angeles'
+});
 
-// var fiveJob = new CronJob({
-//   cronTime: '00 00 17 * * *',
-//   onTick: function() {
-//   	console.log('running');
-//    	for (var i = 0; i < sc_ids.length; i++) {
-// 		run_playlist(sc_ids[i]);
-// 		run_post(sc_ids[i]);
-// 	}
-//   },
-//   start: false,
-//   timeZone: 'America/Los_Angeles'
-// });
+var eightJob = new CronJob({
+  cronTime: '00 00 8 * * *',
+  onTick: function() {
+  	console.log('running');
+   	for (var i = 0; i < sc_ids.length; i++) {
+		run_tracks(sc_ids[i]);
+		run_faves(sc_ids[i]);
+		run_playlist(sc_ids[i]);
+		run_post(sc_ids[i]);
+	}
+  },
+  start: false,
+  timeZone: 'America/Los_Angeles'
+});
 
-// var eightJob = new CronJob({
-//   cronTime: '00 00 8 * * *',
-//   onTick: function() {
-//   	console.log('running');
-//    	for (var i = 0; i < sc_ids.length; i++) {
-// 		run_playlist(sc_ids[i]);
-// 		run_post(sc_ids[i]);
-// 	}
-//   },
-//   start: false,
-//   timeZone: 'America/Los_Angeles'
-// });
-
-// console.log('Script Started');
-// fiveJob.start();
-// eightJob.start();
+console.log('Script Started');
+fiveJob.start();
+eightJob.start();
 
 
