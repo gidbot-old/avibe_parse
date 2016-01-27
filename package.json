@@ -1,0 +1,19 @@
+{
+  "name": "parse_scripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "add_sc_blogs.js",
+  "dependencies": {
+    "ajax-request": "^1.2.1",
+    "node-soundcloud": "^0.0.4",
+    "cron": "^1.1.0",
+    "parse": "^1.6.14",
+    "request": "^2.67.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node add_sc_blogs.js"
+  },
+  "author": "gidbot",
+  "license": "MIT"
+}
