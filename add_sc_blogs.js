@@ -31,41 +31,89 @@ var download = function (playlist, callback) {
 	}
 }
 
-var trackAlreadyExists = function (track, playlist, user_id, callback) {
+var getNewTracks = function (playlists, user_id, callback) {
+	var titles = []; 
+	var playlistsCheck = []; 
+	for (var i = 0; i < playlists.length; i++) {
+		playlistsCheck.push(playlists[i].title);
+		for (var j = 0; j < playlists[i].tracks.length; j++){
+			titles.push(playlists[i].tracks[j].title);
+		}
+	}
+
 	var Playlist = Parse.Object.extend("Playlists");
 	var query = new Parse.Query(Playlist);
+
 	query.equalTo("user", user_id);
-	query.equalTo("title", track.title);
-	query.equalTo("name", playlist.title);
-	query.first({
-	  success: function(object) {
-	  	var found = (object) ? true: false; 
-	  	callback(found, track, playlist);
+	query.containedIn("title", titles);
+	query.containedIn("name", playlistsCheck);
+
+	query.find({
+	  success: function(results) {
+	  	var parseCheck = [];
+	  	var toReturn = []; 
+	  	for (var i = 0; i < results.length; i++) {
+	  		parseCheck.push(results[i].get("title") + ":" + results[i].get("name"));
+	  	}
+	  	for (var i = 0; i < playlists.length; i++) {
+	  		for (var j = 0; j < playlists[i].tracks.length; j++){
+		  		var check = playlists[i].tracks[j].title + ":" + playlists[i].name; 
+		  		if (parseCheck.indexOf(check) < 0) {
+		  			toReturn.push({
+		  				song_title: playlists[i].tracks[j].title,
+		  				artist: playlists[i].tracks[j].user.username,
+		  				playlist_name: playlists[i].title
+		  			})
+		  		}
+		  	}
+	  	}
+	  	callback(toReturn);
+
 	  },
 	  error: function(error) {
-	  	console.log('Searching for Track Error');
+	  	console.log('Searching for Tracks Error');
 	  	console.log(error); 
-	    callback(true, track, playlist);
+	    callback(false);
 	  }
 	});
 }
 
-var postAlreadyExists = function (post, user_id, callback) {
+var getNewPosts = function (posts, user_id, callback) {
+	var titles = []; 
+	var artists = []; 
+
+	for (var i = 0; i < posts.length; i++) {
+		titles.push(posts[i].title); 
+		artists.push(posts[i].user.username);
+	}
+
 	var ParsePost = Parse.Object.extend("Posts");
 	var query = new Parse.Query(ParsePost);
-	query.equalTo("title", post.title);
+	query.containedIn("title", titles);
 	query.equalTo("user", user_id);
-	query.equalTo("artist", post.user.username);
+	query.containedIn("artist", artists);
 
-	query.first({
-	  success: function(object) {
-	  	var found = (object) ? true: false; 
-	  	callback(found, post);
+	query.find({
+	  success: function(results) {
+	  	var parseCheck = [];
+	  	var toReturn = []; 
+	  	for (var i = 0; i < results.length; i++) {
+	  		parseCheck.push(results[i].get("title") + ":" + results[i].get("artist"));
+	  	}
+	  	for (var i = 0; i < posts.length; i++) {
+	  		var check = posts[i].title + ":" + posts[i].user.username; 
+	  		if (parseCheck.indexOf(check) < 0) {
+	  			toReturn.push({
+	  				title: posts[i].title,
+	  				artist: posts[i].user.username
+	  			})
+	  		}
+	  	}
+	  	callback(toReturn);
 	  },
 	  error: function(error) {
-	  	console.log('Searching for Post Error');
 	  	console.log(error); 
-	    callback(true, post);
+	    callback(false);
 	  }
 	});
 }
@@ -137,39 +185,34 @@ var getParseUser = function (sc_id, callback) {
 }
 
 var calculate_posts = function (sc_id, posts) {
+	var postsToSave = []; 
 	getParseUser(sc_id, function (parseUserId, parseDisplayName, parseUserName) {
-	    var totalCheck = 0; 
-	    function runPosts(i) {
-			if (i < posts.length) {
-				postAlreadyExists(posts[i], parseUserId, function (exists, post) {
-					if (!exists) {
-						var ParsePost= Parse.Object.extend("Posts");
-						var parsePost = new ParsePost();
-						parsePost.set('user', parseUserId); 
-						parsePost.set('userName', parseDisplayName); 
-						parsePost.set('username', parseUserName); 
-						
-						parsePost.set('title', post.title); 
-						parsePost.set('artist', post.user.username); 
-						
-						parsePost.save(null, {
-						  success: function(track) {
-						    console.log('Success');
-						    runPosts(i);
-						  },
-						  error: function(track, error) {
-						    console.log('Track Save Failure');
-						    console.log(error);
-						  }
-						});
-					} else {
-						i = i + 1;
-						runPosts(i);
-					}
-				}); 
+	    getNewPosts(posts, parseUserId, function (new_posts) {
+			for (var i = 0; i < new_posts.length; i++) {
+
+				var ParsePost= Parse.Object.extend("Posts");
+				var parsePost = new ParsePost();
+				parsePost.set('user', parseUserId); 
+				parsePost.set('userName', parseDisplayName); 
+				parsePost.set('username', parseUserName); 
+				
+				parsePost.set('title', new_posts[i].title); 
+				parsePost.set('artist', new_posts[i].artist); 
+				
+				postsToSave.push(parsePost);
 			} 
-		}
-  		runPosts(0);  
+			
+			Parse.Object.saveAll(postsToSave, {
+			    success: function(list) {
+			      	console.log('Successfully Added Posts');
+			    },
+			    error: function(error) {
+			    	console.log('Error Saving Posts');
+			    	console.log(error);
+			    },
+			});
+		
+		});  
     });
 }
 
@@ -194,55 +237,45 @@ var run_faves = function (sc_id) {
 	}); 
 }; 
 
-var run_playlist = function (sc_id) {
+var run_playlists = function (sc_id) {
+	var tracksToSave = [];
 	SC.get('/users/'+sc_id+'/playlists', function (err, playlists) {
 	  if ( err ) {
 	  	console.log(err); 
 	  } else {
 	  	getParseUser(sc_id, function (parseUserId, parseDisplayName) {
-		    var totalCheck = 0; 
-		    function runTracks (i, j) {
-		    	if (i < playlists.length) {
-					if (j < playlists[i].tracks.length) {
-						trackAlreadyExists(playlists[i].tracks[j], playlists[i], parseUserId, function (exists, track, playlist) {
-							if (!exists) {
-								var ParseTrack = Parse.Object.extend("Playlists");
-								var parseTrack = new ParseTrack();
-								parseTrack.set('artist', track.user.username); 
-								parseTrack.set('name', playlist.title); 
-								parseTrack.set('source', 'soundcloud'); 
-								parseTrack.set('user', parseUserId); 
-								parseTrack.set('title', track.title); 
-								parseTrack.set('userName', parseDisplayName); 
-								parseTrack.save(null, {
-								  success: function(track) {
-								    console.log('Success');
-								    j = j+1; 
-								    runTracks(i, j);
-								  },
-								  error: function(track, error) {
-								    console.log('Track Save Failure');
-								    console.log(error);
-								  }
-								});
-							} else {
-								j = j+1; 
-								runTracks(i, j);
-							}
-						}); 
-					} else {
-						console.log('new playlist'); 
-						checkName(playlists[i], parseUserId, parseDisplayName); 
-						i = i+1; 
-						runTracks(i, 0);
-					}
-		    	} else {
-		    		console.log('Done');
-		    	}
+			getNewTracks(playlists, parseUserId, function (tracks) {
+				
+				for (var i = 0; i < tracks.length; i++) {
 
-			}
-	  		runTracks(0, 0);  
-	    });
+					var ParseTrack = Parse.Object.extend("Playlists");
+					var parseTrack = new ParseTrack();
+					parseTrack.set('source', 'soundcloud'); 
+					parseTrack.set('user', parseUserId); 
+					parseTrack.set('userName', parseDisplayName); 
+
+					parseTrack.set('name', tracks[i].playlist_name); 
+					parseTrack.set('title', tracks[i].song_title); 
+					parseTrack.set('artist', tracks[i].artist); 
+					tracksToSave.push(parseTrack);
+	    		}
+
+	    		 Parse.Object.saveAll(tracksToSave, {
+				    success: function(list) {
+				      	console.log('Successfully Added Tracks');
+				    },
+				    error: function(error) {
+				    	console.log('Error Saving');
+				    	console.log(error);
+				    },
+				  });
+	    	});
+
+	    	for (var i = 0; i < playlists.length; i++){
+	    		checkName(playlists[i], parseUserId, parseDisplayName);
+	    	}
+  
+		});
 	  }
 	});
 }
@@ -256,9 +289,9 @@ var sc_ids = [
 ];
 
 var fiveJob = new CronJob({
-  cronTime: '00 35 16 * * *',
+  cronTime: '00 08 12 * * *',
   onTick: function() {
-  	console.log('Started 4:30pm');
+  	console.log('Started 8:12pm');
    	for (var i = 0; i < sc_ids.length; i++) {
 		run_tracks(sc_ids[i]);
 		run_faves(sc_ids[i]);
