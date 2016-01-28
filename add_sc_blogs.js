@@ -256,7 +256,7 @@ var sc_ids = [
 ];
 
 var fiveJob = new CronJob({
-  cronTime: '00 30 16 * * *',
+  cronTime: '00 32 16 * * *',
   onTick: function() {
   	console.log('Started 4:30pm');
    	for (var i = 0; i < sc_ids.length; i++) {

@@ -6,8 +6,8 @@ app.get('/', function (req, res) {
   res.send('Avibe Script Server');
 });
 
-app.listen(3000, function () {
-  console.log(' Starting App on 3000!');
+app.listen(process.env.PORT || 5000, function () {
+  console.log('Starting App on 3000!');
 });
 
 add_sc_blogs.start();
