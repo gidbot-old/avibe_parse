@@ -2,7 +2,6 @@
   "name": "parse_scripts",
   "version": "1.0.0",
   "description": "",
-  "main": "add_sc_blogs.js",
   "dependencies": {
     "ajax-request": "^1.2.1",
     "cron": "^1.1.0",
@@ -12,8 +11,9 @@
     "request": "^2.67.0"
   },
   "devDependencies": {},
+  "main": "app.js",
   "scripts": {
-    "start": "app.js"
+    "start": "node app.js"
   },
   "author": "gidbot",
   "license": "MIT"
