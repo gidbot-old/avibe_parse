@@ -248,17 +248,17 @@ var run_playlist = function (sc_id) {
 }
 
 var sc_ids = [
-	// 'mugatunesofficial', 
-	// 'complexmag', 
+	'mugatunesofficial', 
+	'complexmag', 
 	'highonmusic1', 
-	// 'david_perkins14', 
-	// 'gideon-rosenthal'
+	'david_perkins14', 
+	'gideon-rosenthal'
 ];
 
 var fiveJob = new CronJob({
-  cronTime: '00 00 17 * * *',
+  cronTime: '00 12 16 * * *',
   onTick: function() {
-  	console.log('running');
+  	console.log('Started 4:12pm');
    	for (var i = 0; i < sc_ids.length; i++) {
 		run_tracks(sc_ids[i]);
 		run_faves(sc_ids[i]);
@@ -273,7 +273,7 @@ var fiveJob = new CronJob({
 var eightJob = new CronJob({
   cronTime: '00 00 8 * * *',
   onTick: function() {
-  	console.log('running');
+  	console.log('Started 8:00am');
    	for (var i = 0; i < sc_ids.length; i++) {
 		run_tracks(sc_ids[i]);
 		run_faves(sc_ids[i]);
