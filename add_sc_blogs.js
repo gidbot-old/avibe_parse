@@ -256,9 +256,9 @@ var sc_ids = [
 ];
 
 var fiveJob = new CronJob({
-  cronTime: '00 12 16 * * *',
+  cronTime: '00 30 16 * * *',
   onTick: function() {
-  	console.log('Started 4:12pm');
+  	console.log('Started 4:30pm');
    	for (var i = 0; i < sc_ids.length; i++) {
 		run_tracks(sc_ids[i]);
 		run_faves(sc_ids[i]);
@@ -285,8 +285,11 @@ var eightJob = new CronJob({
   timeZone: 'America/Los_Angeles'
 });
 
-console.log('Script Started');
-fiveJob.start();
-eightJob.start();
+exports.start = function () {
+	console.log('Script Started');
+	fiveJob.start();
+	eightJob.start();
+}
+
 
 
