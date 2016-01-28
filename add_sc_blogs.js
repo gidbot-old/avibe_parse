@@ -289,13 +289,13 @@ var sc_ids = [
 ];
 
 var fiveJob = new CronJob({
-  cronTime: '00 15 12 * * *',
+  cronTime: '00 17 12 * * *',
   onTick: function() {
-  	console.log('Started 12:14pm');
+  	console.log('Started 12:17pm');
    	for (var i = 0; i < sc_ids.length; i++) {
 		run_tracks(sc_ids[i]);
 		run_faves(sc_ids[i]);
-		run_playlist(sc_ids[i]);
+		run_playlists(sc_ids[i]);
 	}
   },
   start: false,
@@ -309,7 +309,7 @@ var eightJob = new CronJob({
    	for (var i = 0; i < sc_ids.length; i++) {
 		run_tracks(sc_ids[i]);
 		run_faves(sc_ids[i]);
-		run_playlist(sc_ids[i]);
+		run_playlists(sc_ids[i]);
 	}
   },
   start: false,
