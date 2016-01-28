@@ -289,9 +289,9 @@ var sc_ids = [
 ];
 
 var fiveJob = new CronJob({
-  cronTime: '00 17 12 * * *',
+  cronTime: '00 20 12 * * *',
   onTick: function() {
-  	console.log('Started 12:17pm');
+  	console.log('Started 12:20pm');
    	for (var i = 0; i < sc_ids.length; i++) {
 		run_tracks(sc_ids[i]);
 		run_faves(sc_ids[i]);
