@@ -31,22 +31,23 @@ var download = function (playlist, callback) {
 	}
 }
 
-var getNewTracks = function (playlists, user_id, callback) {
+var getNewTracks = function (playlist, user_id, callback) {
 	var titles = []; 
 	var playlistsCheck = []; 
-	for (var i = 0; i < playlists.length; i++) {
-		playlistsCheck.push(playlists[i].title);
-		for (var j = 0; j < playlists[i].tracks.length; j++){
-			titles.push(playlists[i].tracks[j].title);
-		}
+	
+	playlistsCheck.push(playlist.title);
+	for (var j = 0; j < playlist.tracks.length; j++){
+		titles.push(playlist.tracks[j].title);
 	}
+	
 
 	var Playlist = Parse.Object.extend("Playlists");
 	var query = new Parse.Query(Playlist);
 
 	query.equalTo("user", user_id);
-	query.containedIn("title", titles);
 	query.containedIn("name", playlistsCheck);
+	query.containedIn("title", titles);
+	query.limit(1000)
 
 	query.find({
 	  success: function(results) {
@@ -55,18 +56,18 @@ var getNewTracks = function (playlists, user_id, callback) {
 	  	for (var i = 0; i < results.length; i++) {
 	  		parseCheck.push(results[i].get("title") + ":" + results[i].get("name"));
 	  	}
-	  	for (var i = 0; i < playlists.length; i++) {
-	  		for (var j = 0; j < playlists[i].tracks.length; j++){
-		  		var check = playlists[i].tracks[j].title + ":" + playlists[i].name; 
-		  		if (parseCheck.indexOf(check) < 0) {
-		  			toReturn.push({
-		  				song_title: playlists[i].tracks[j].title,
-		  				artist: playlists[i].tracks[j].user.username,
-		  				playlist_name: playlists[i].title
-		  			})
-		  		}
-		  	}
+  		
+  		for (var j = 0; j < playlist.tracks.length; j++){
+	  		var check = playlist.tracks[j].title + ":" + playlist.title; 			  		
+	  		if (parseCheck.indexOf(check) < 0) {
+	  			toReturn.push({
+	  				song_title: playlist.tracks[j].title,
+	  				artist: playlist.tracks[j].user.username,
+	  				playlist_name: playlist.title
+	  			})
+	  		}
 	  	}
+  	
 	  	callback(toReturn);
 
 	  },
@@ -92,6 +93,7 @@ var getNewPosts = function (posts, user_id, callback) {
 	query.containedIn("title", titles);
 	query.equalTo("user", user_id);
 	query.containedIn("artist", artists);
+	query.limit(1000);
 
 	query.find({
 	  success: function(results) {
@@ -238,42 +240,43 @@ var run_faves = function (sc_id) {
 }; 
 
 var run_playlists = function (sc_id) {
-	var tracksToSave = [];
 	SC.get('/users/'+sc_id+'/playlists', function (err, playlists) {
 	  if ( err ) {
 	  	console.log(err); 
 	  } else {
 	  	getParseUser(sc_id, function (parseUserId, parseDisplayName) {
-			getNewTracks(playlists, parseUserId, function (tracks) {
-				
-				for (var i = 0; i < tracks.length; i++) {
+	    	for (var i = 0; i < playlists.length; i++) {
 
-					var ParseTrack = Parse.Object.extend("Playlists");
-					var parseTrack = new ParseTrack();
-					parseTrack.set('source', 'soundcloud'); 
-					parseTrack.set('user', parseUserId); 
-					parseTrack.set('userName', parseDisplayName); 
+				getNewTracks(playlists[i], parseUserId, function (tracks) {
+					console.log(tracks.length);
+					var tracksToSave = [];
+					for (var i = 0; i < tracks.length; i++) {
+						var ParseTrack = Parse.Object.extend("Playlists");
+						var parseTrack = new ParseTrack();
+						parseTrack.set('source', 'soundcloud'); 
+						parseTrack.set('user', parseUserId); 
+						parseTrack.set('userName', parseDisplayName); 
 
-					parseTrack.set('name', tracks[i].playlist_name); 
-					parseTrack.set('title', tracks[i].song_title); 
-					parseTrack.set('artist', tracks[i].artist); 
-					tracksToSave.push(parseTrack);
-	    		}
+						parseTrack.set('name', tracks[i].playlist_name); 
+						parseTrack.set('title', tracks[i].song_title); 
+						parseTrack.set('artist', tracks[i].artist); 
+						tracksToSave.push(parseTrack);
 
-	    		 Parse.Object.saveAll(tracksToSave, {
-				    success: function(list) {
-				      	console.log('Successfully Added Tracks');
-				    },
-				    error: function(error) {
-				    	console.log('Error Saving');
-				    	console.log(error);
-				    },
-				  });
-	    	});
+		    		}	
 
-	    	for (var i = 0; i < playlists.length; i++){
-	    		checkName(playlists[i], parseUserId, parseDisplayName);
-	    	}
+		    		 Parse.Object.saveAll(tracksToSave, {
+					    success: function(list) {
+					      	console.log('Successfully Added Tracks');
+					    },
+					    error: function(error) {
+					    	console.log('Error Saving');
+					    	console.log(error);
+					    },
+					  });
+		    	});
+
+		    		checkName(playlists[i], parseUserId, parseDisplayName);
+		    }
   
 		});
 	  }
@@ -289,9 +292,9 @@ var sc_ids = [
 ];
 
 var fiveJob = new CronJob({
-  cronTime: '00 20 12 * * *',
+  cronTime: '00 00 17 * * *',
   onTick: function() {
-  	console.log('Started 12:20pm');
+  	console.log('Started 5:00pm');
    	for (var i = 0; i < sc_ids.length; i++) {
 		run_tracks(sc_ids[i]);
 		run_faves(sc_ids[i]);
