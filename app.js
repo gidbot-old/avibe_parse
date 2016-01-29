@@ -10,4 +10,4 @@ app.listen(process.env.PORT || 5000, function () {
   console.log('Starting App on 3000!');
 });
 
-add_sc_blogs.start();
+// add_sc_blogs.start();
