@@ -8,6 +8,23 @@ Parse.initialize("RdJVAvoHpmjpqxndp45yD7Ty56HJqM98r0Jt640I", "VdjZ4XIHO3W6Kfwj39
 var request = require('request').defaults({ encoding: null });
 
 
+
+var sc_ids = [
+	'mugatunesofficial', 
+	'complexmag', 
+	'highonmusic1', 
+	'maddecent',
+	'foolsgoldrecs', 
+	'beautifulbuzzz',
+	'audioicecream',
+	'cavemansound',
+	'1833-fm',
+	'tropical-frnds',
+	'magic-vibe',
+	'tipsytortoise'
+];
+
+
 // Initialize client 
 SC.init({
   id: '59eb1477141bd5ebe585541570e6d9c8',
@@ -282,14 +299,6 @@ var run_playlists = function (sc_id) {
 	  }
 	});
 }
-
-var sc_ids = [
-	'mugatunesofficial', 
-	'complexmag', 
-	'highonmusic1', 
-	'maddecent',
-	'foolsgoldrecs'
-];
 
 var start = function () {
 	console.log('Script Started');
