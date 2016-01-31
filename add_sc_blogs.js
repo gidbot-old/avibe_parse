@@ -287,8 +287,8 @@ var sc_ids = [
 	'mugatunesofficial', 
 	'complexmag', 
 	'highonmusic1', 
-	'david_perkins14', 
-	'gideon-rosenthal'
+	'maddecent',
+	'foolsgoldrecs'
 ];
 
 var start = function () {
@@ -301,41 +301,6 @@ var start = function () {
 }
 
 start();
-
-
-// var fiveJob = new CronJob({
-//   cronTime: '00 00 17 * * *',
-//   onTick: function() {
-//   	console.log('Started 5:00pm');
-//    	for (var i = 0; i < sc_ids.length; i++) {
-// 		run_tracks(sc_ids[i]);
-// 		run_faves(sc_ids[i]);
-// 		run_playlists(sc_ids[i]);
-// 	}
-//   },
-//   start: false,
-//   timeZone: 'America/Los_Angeles'
-// });
-
-// var eightJob = new CronJob({
-//   cronTime: '00 00 8 * * *',
-//   onTick: function() {
-//   	console.log('Started 8:00am');
-//    	for (var i = 0; i < sc_ids.length; i++) {
-// 		run_tracks(sc_ids[i]);
-// 		run_faves(sc_ids[i]);
-// 		run_playlists(sc_ids[i]);
-// 	}
-//   },
-//   start: false,
-//   timeZone: 'America/Los_Angeles'
-// });
-
-// var start = function () {
-// 	console.log('Script Started');
-// 	fiveJob.start();
-// 	eightJob.start();
-// }
 
 
 
