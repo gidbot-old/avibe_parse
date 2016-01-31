@@ -309,7 +309,5 @@ var start = function () {
 	}
 }
 
-start();
-
 
 
